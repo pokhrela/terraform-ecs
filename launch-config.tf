@@ -16,7 +16,7 @@ resource "aws_launch_configuration" "default" {
 
     security_groups             = ["${aws_security_group.default.id}"]
     associate_public_ip_address = "true"
-    key_name                    = "terraform-ecs-nginx"
+    key_name                    = "docker"
     user_data                   = <<EOF
                                   #!/bin/bash
                                   echo ECS_CLUSTER=ecs-nginx >> /etc/ecs/ecs.config
