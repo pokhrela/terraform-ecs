@@ -1,11 +1,10 @@
 resource "aws_ecs_service" "default" {
   name            = "api"
   cluster         = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.default.arn}"
+  task_definition = "${aws_ecs_task_definition.default.family}:${max("${aws_ecs_task_definition.default.revision}", 0)}"
   desired_count   = 3
   iam_role        = "${aws_iam_role.ecs.arn}"
-  depends_on      = ["aws_iam_role_policy.ecs"]
-
+  
   ordered_placement_strategy {
     type  = "binpack"
     field = "cpu"
@@ -20,15 +19,21 @@ resource "aws_ecs_service" "default" {
 
 resource "aws_ecs_task_definition" "default" {
   family                = "nginx"
-  container_definitions = "${file("task-definitions/service.json")}"
-
-  volume {
-    name      = "service-storage"
-    host_path = "/ecs/service-storage"
+  container_definitions = <<DEFINITION
+[
+  {
+    "name": "nginx",
+    "image": "pokhrelaashish/helloapp-nginx:v1",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "memory": 512,
+    "cpu": 1024
   }
-
-  placement_constraints {
-    type       = "memberOf"
-    expression = "attribute:ecs.availability-zone in [us-east-1b, us-east-1d]"
-  }
+]
+DEFINITION
 }
